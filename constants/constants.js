@@ -23,8 +23,6 @@ const COLORS = {
 
 const OFFSET = {
     OVERLAP: 20,
-    APPLE: 10,
-    SNAKE: 15,
     BOUNDARY: 10
 }
 

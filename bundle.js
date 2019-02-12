@@ -24,8 +24,6 @@ const COLORS = {
 
 const OFFSET = {
     OVERLAP: 20,
-    APPLE: 10,
-    SNAKE: 15,
     BOUNDARY: 10
 }
 
@@ -110,9 +108,7 @@ class Game {
     constructor() {
         this.canvas = document.createElement('canvas');
         this.ctx = this.canvas.getContext('2d');
-        //initiate game variables
-        // this.width = 700;
-        // this.height = 700;
+        //initiate game variables 
         this.canvas.width = 700;
         this.canvas.height = 700;
         this.score = 0;
@@ -235,7 +231,6 @@ class Game {
         if (currMove === this.prevMove) {
             return false;
         } else { // if counter-direction, returns false - otherwise returns true
-            //todo
             switch (currMove) {
                 case DIRECTIONS.LEFT:
                     return this.prevMove === DIRECTIONS.RIGHT ? false : true;
