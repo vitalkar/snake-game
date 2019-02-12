@@ -6,8 +6,10 @@ const { COLORS, TYPES } = require('../constants/constants');
  */
 class Field extends GameObject{
 
-    constructor(c) {
-        super(c, TYPES.FIELD);       
+    constructor(c, w, h) {
+        super(c, TYPES.FIELD);
+        this.width = w;
+        this.height = h;       
     }
     
     draw() {

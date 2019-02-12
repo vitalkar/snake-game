@@ -7,44 +7,41 @@ const {COLORS, DIRECTIONS, TYPES} = require('../constants/constants');
  */
 class Snake extends GameObject {
 
-    constructor(c) {
+    constructor(c, l) {
         super(c, TYPES.SNAKE);
-        //trail of points that constructs the snake
         //initial position 
+        this._location = l;
+        //trail of points that constructs the snake
         this.trail = [new Point(this.location.x, this.location.y)];
-        //snake speed
+        //snake's speed
         this.speed = 20;
         //inial direction
         this.direction = { x: 0, y: 0 };
     }
-    //inc snake 
-    inc() {
-        //todo        
+    //increase snake trail
+    inc() {      
         const loc = this.trail[this.trail.length - 1];
         this.trail.push(new Point(loc.x, loc.y));
     }
 
     draw() {
         const { x, y } = this.direction;
-        this.location.x += x;
+        //change current location
+        this.location.x += x; 
         this.location.y += y;
-        //enqueue new location, dequeue old location 
-        //todo opposite way
+        //enqueue 
         this.trail.unshift(new Point(this.location.x, this.location.y));
+        //dequeue
         this.trail.pop();
-        //
+        //draw 
         this.ctx.shadowBlur = 7;
         this.ctx.shadowColor = COLORS.SNAKE;
         this.ctx.fillStyle = COLORS.SNAKE;
         this.trail.forEach(p => this.ctx.fillRect(p.x, p.y, this.width, this.height));
         this.ctx.shadowBlur = 0;
-
     }
-
-    //todo must i use 2 switch mechanisems?
     //set current direction of the snake
     setDirection(direction) {
-
         switch (direction) {
             case DIRECTIONS.LEFT:
                 this.direction = { x: -(this.speed), y: 0 };
@@ -61,5 +58,4 @@ class Snake extends GameObject {
         }
     }
 }
-
 module.exports = Snake;

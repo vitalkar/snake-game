@@ -4,8 +4,7 @@ const Snake = require('./Snake');
 const Apple = require('./Apple');
 const Obstacle = require('./Obstacle');
 const Point = require('./Point');
-const { DIRECTIONS, OFFSET, TYPES } = require('../constants/constants');
-const SNAKE_OFFSET = 10, BOUNDARY_OFFSET = 15, OVERLAP_OFFSET = 20, APPLE_OFFSET = 10;
+const { DIRECTIONS, OFFSET } = require('../constants/constants');
 /**
  * represents the game & all of it's parts
  */
@@ -15,10 +14,10 @@ class Game {
         this.canvas = document.createElement('canvas');
         this.ctx = this.canvas.getContext('2d');
         //initiate game variables
-        this.width = 700;
-        this.height = 700;
-        this.canvas.width = this.width;
-        this.canvas.height = this.height;
+        // this.width = 700;
+        // this.height = 700;
+        this.canvas.width = 700;
+        this.canvas.height = 700;
         this.score = 0;
         //number of obstacles generated in one time
         this.numOfObstacles = 5;
@@ -35,10 +34,10 @@ class Game {
     init() {
         this.score = 0;
         this.prevMove = '';
-        this.field = new Field(this.ctx);
-        this.snake = new Snake(this.ctx);
-        this.apple = new Apple(this.ctx, new Point(this.generateRandom(this.width - OFFSET.OVERLAP),
-            this.generateRandom(this.height - OFFSET.OVERLAP)));
+        this.field = new Field(this.ctx, this.canvas.width, this.canvas.height);
+        this.snake = new Snake(this.ctx, new Point(this.canvas.width / 2, this.canvas.height / 2));
+        this.apple = new Apple(this.ctx, new Point(this.generateRandom(this.canvas.width - OFFSET.OVERLAP),
+            this.generateRandom(this.canvas.height - OFFSET.OVERLAP)));
         this.obstacles = [];
         this.interval = setInterval(() => {
             this.render();
@@ -51,8 +50,8 @@ class Game {
             //generate new location for the apple
             let duplicate = true;
             while (duplicate) {
-                this.apple.location.x = this.generateRandom(this.width - OFFSET.OVERLAP);
-                this.apple.location.y = this.generateRandom(this.height - OFFSET.OVERLAP);
+                this.apple.location.x = this.generateRandom(this.canvas.width - OFFSET.OVERLAP);
+                this.apple.location.y = this.generateRandom(this.canvas.height - OFFSET.OVERLAP);
                 duplicate = this.obstacles.some(obs => this.isOverlap(this.apple, obs));
             }
         }
@@ -85,14 +84,12 @@ class Game {
     isCrash() {
         const s = this.snake.location;
         //determines a crash with field's boundries
-        //todo
         if (s.x < OFFSET.BOUNDARY || s.y < OFFSET.BOUNDARY ||
-            s.x > this.width - OFFSET.BOUNDARY - 5 ||
-            s.y > this.height - OFFSET.BOUNDARY - 5) {
+            s.x > this.canvas.width - OFFSET.BOUNDARY - 5 ||
+            s.y > this.canvas.height - OFFSET.BOUNDARY - 5) {
             return true;
-        } else if (this.snake.trail.length > 3) {//determine a collision of the snake with itself
-            //todo
-            return this.snake.trail.slice(1).some(point => point.x === this.snake.location.x && point.y === this.snake.location.y);
+        } else if (this.snake.trail.length > 3) {//determine a crash of the snake with itself
+            return this.snake.trail.slice(1).some(p => p.x === this.snake.location.x && p.y === this.snake.location.y);
         } else if (this.obstacles.length > 0) { //if there are obstacles in the field
             //determines a collision with an obstacle            
             return this.obstacles.some(obs => this.isOverlap(this.snake, obs));
@@ -111,8 +108,8 @@ class Game {
     addObstacles() {
         //generate obstacles in random locations
         for (let i = 0; i < this.numOfObstacles; i++) {
-            let obs = new Obstacle(this.ctx, new Point(this.generateRandom(this.width - OFFSET.OVERLAP), 
-                                this.generateRandom(this.height - OFFSET.OVERLAP)));
+            let obs = new Obstacle(this.ctx, new Point(this.generateRandom(this.canvas.width - OFFSET.OVERLAP), 
+                                this.generateRandom(this.canvas.height - OFFSET.OVERLAP)));
             //if no overlap detected
             if (this.isOverlap(this.apple, obs) || this.isOverlap(this.snake, obs)) {
                 i--;
@@ -120,10 +117,6 @@ class Game {
                 this.obstacles.push(obs);           
             }  
         }
-    }
-    //returns canvas ref
-    getCanvas() {
-        return this.canvas;
     }
     //generates random number in range of (0 - n) + OFFSET
     generateRandom(n) {
@@ -181,7 +174,7 @@ class Game {
     //sets event listeners
     configLayout(c, b, s) {
         //append canvas 
-        c.appendChild(this.getCanvas());
+        c.appendChild(this.canvas);
         //set obstacles generator
         b.addEventListener('click', () => {
             this.addObstacles();
