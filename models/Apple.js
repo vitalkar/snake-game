@@ -1,8 +1,6 @@
 'use strict';
-
 const GameObject = require('./GameObject');
 const { COLORS, TYPES } = require('../constants/constants');
-
 /**
  * represents apple game object
  */
@@ -21,5 +19,4 @@ class Apple extends GameObject {
         this.ctx.closePath();
     }
 }
-
 module.exports = Apple;

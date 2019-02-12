@@ -21,31 +21,28 @@ class Snake extends GameObject {
     inc() {
         //todo        
         const loc = this.trail[this.trail.length - 1];
-        // console.log(loc);
-
-        //
         this.trail.push(new Point(loc.x, loc.y));
     }
-    //
+
     draw() {
-        //
         const { x, y } = this.direction;
         this.location.x += x;
         this.location.y += y;
         //enqueue new location, dequeue old location 
+        //todo
         this.trail.unshift(new Point(this.location.x, this.location.y));
         this.trail.pop();
         //
-        // this.ctx.fillStyle = '#000';
-        // this.trail.forEach(p => this.ctx.strokeRect(p.x, p.y, this.width, this.height));
-        this.trail.forEach(p => {
-            // this.ctx.strokeRect(p.x, p.y, this.width, this.height);
-            this.ctx.beginPath();
-            this.ctx.fillStyle = COLORS.SNAKE;
-            this.ctx.arc(p.x, p.y, 10, 0, 2 * Math.PI);
-            this.ctx.fill();
-            this.ctx.closePath();
-        });
+        this.ctx.fillStyle = COLORS.SNAKE;
+        this.trail.forEach(p => this.ctx.fillRect(p.x, p.y, this.width, this.height));
+        // this.trail.forEach(p => {
+        //     // this.ctx.strokeRect(p.x, p.y, this.width, this.height);
+        //     this.ctx.beginPath();
+        //     this.ctx.fillStyle = COLORS.SNAKE;
+        //     this.ctx.arc(p.x, p.y, 10, 0, 2 * Math.PI);
+        //     this.ctx.fill();
+        //     this.ctx.closePath();
+        // });
     }
 
     //todo must i use 2 switch mechanisems?

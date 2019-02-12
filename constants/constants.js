@@ -15,10 +15,11 @@ const TYPES = {
 };
 //game object colors
 const COLORS = {
-    SNAKE: '#2337B9',
+    SNAKE: '#7670a5',
     APPLE: '#890C0C',
     OBSTACLE: '#737674',
-    FIELD1: '#26A200',
+    // FIELD1: '#26A200',
+    FIELD1: '#16561c',
     FIELD2: '#7baa61'
 };
 

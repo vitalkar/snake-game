@@ -16,10 +16,11 @@ const TYPES = {
 };
 //game object colors
 const COLORS = {
-    SNAKE: '#2337B9',
+    SNAKE: '#7670a5',
     APPLE: '#890C0C',
     OBSTACLE: '#737674',
-    FIELD1: '#26A200',
+    // FIELD1: '#26A200',
+    FIELD1: '#16561c',
     FIELD2: '#7baa61'
 };
 
@@ -31,41 +32,21 @@ module.exports = {
 
 },{}],2:[function(require,module,exports){
 'use strict';
-//todo fix sizing issues : snake & obs
-//todo 'play again' modal, after crash event
     const Game = require('./models/Game');
     const game = new Game();
     const score = document.getElementById('score');
     const btnObstacles = document.getElementById('btnObstacles');
-    // const btnStart = document.getElementById('btnStart');
     const container = document.getElementById('container');
-    //append canvas 
-    container.appendChild(game.getCanvas());
-    //set obstacles generator
-    btnObstacles.addEventListener('click', () => {
-        game.addObstacles();
-    });
-    //set score update handler
-    document.addEventListener('updateScore', (e) => {
-        score.innerText = `Score: ${e.detail}`;
-    });
-    //set end of game handler
-    document.addEventListener('crash', (e) => {
-        if (confirm('play again?')) {
-            game.init();
-            score.innerText = 'Score: 0';
-        }
-    });
+
+    game.configLayout(container, btnObstacles);
     //initiate game
     game.init();
 
 
 },{"./models/Game":5}],3:[function(require,module,exports){
 'use strict';
-
 const GameObject = require('./GameObject');
 const { COLORS, TYPES } = require('../constants/constants');
-
 /**
  * represents apple game object
  */
@@ -84,7 +65,6 @@ class Apple extends GameObject {
         this.ctx.closePath();
     }
 }
-
 module.exports = Apple;
 },{"../constants/constants":1,"./GameObject":6}],4:[function(require,module,exports){
 'use strict';
@@ -118,7 +98,7 @@ const Apple = require('./Apple');
 const Obstacle = require('./Obstacle');
 const Point = require('./Point');
 const { DIRECTIONS } = require('../constants/constants');
-const OFFSET = 20;
+const SNAKE_OFFSET = 10, BOUNDARY_OFFSET = 15, OVERLAP_OFFSET = 20;
 /**
  * represents the game & all of it's parts
  */
@@ -132,6 +112,10 @@ class Game {
         this.height = 700;
         this.canvas.width = this.width;
         this.canvas.height = this.height;
+        // this.canvas.style.width = '100%';
+        // this.canvas.style.height = '100%';
+        // this.width = this.canvas.width;
+        // this.height = this.canvas.height;
         this.score = 0;
         //number of obstacles generated in one time
         this.numOfObstacles = 5;
@@ -141,7 +125,10 @@ class Game {
         this.obstacles = [];
         this.prevMove = '';
         //set game motion controls
-        this.setMotionController();
+        this.setMotionListener();
+        this.SetUpdateScoreListener();
+        this.SetEndOfGameListener();
+        // this.configLayout();
     }
     //returns canvas ref
     getCanvas() {
@@ -151,29 +138,24 @@ class Game {
     render() {
         //determine game state
         if (this.isEat()) {
+            //todo refactor
             //generate new location for the apple
             let duplicate = true;
             while (duplicate) {
-                // x = this.generateRandom(this.field.width - this.apple.width);
-                // y = this.generateRandom(this.field.height - this.apple.height);
-                // loc = new Point(this.generateRandom(this.field.width - this.apple.width),
-                // this.generateRandom(this.field.height - this.apple.height));
-                this.apple.location.x = this.generateRandom(this.width - OFFSET);
-                
-                this.apple.location.y = this.generateRandom(this.height - OFFSET);
+                this.apple.location.x = this.generateRandom(this.width - this.apple.width);
+                this.apple.location.y = this.generateRandom(this.height - this.apple.height);
                 console.log(this.apple.location.x, this.apple.location.y);
-                duplicate = this.obstacles.some(obs => this.isOverlap(obs, this.apple));
+                duplicate = this.obstacles.some(obs => this.OnsOverApple(obs));
             }
         }
+        //check for crash
         if (this.isCrash()) {
-            //
+            //end of game
             clearInterval(this.interval);
-            // const crashEvent = new CustomEvent('crash');
-            document.dispatchEvent(new CustomEvent('crash'));
-        } else {
-            //
+            //dispatch end of game event
+            this.NotifyEndOfGame();
+        } else { //render game state
             this.field.draw();
-            //draw other objects
             if (this.obstacles.length > 0) {
                 this.obstacles.forEach(obs => obs.draw());
             }
@@ -181,64 +163,60 @@ class Game {
             this.snake.draw();
         }
     }
-    //generates random number in range of 0 - n
+    //generates random number in range of (0 - n) + OFFSET
     generateRandom(n) {
-        return Math.floor(Math.random() * n) + OFFSET;
+        return Math.floor(Math.random() * n) + SNAKE_OFFSET;
     }
-    //check for collision between the snake and athe apple
-    //todo is overlapping ?
+    //check if the snake and the apple overlaps
     isEat() {
-        //if snake eats the apple
         const s = this.snake.location,
-            a = this.apple.location,
-            size = Math.floor(this.apple.width / 2);
-
-        if (
-
-            (s.x + this.snake.width) >= a.x
-            && (s.y + this.snake.height) >= a.y
-            && s.x <= (a.x + this.apple.width)
-            && s.y <= (a.y + this.apple.height)
-            // (s.x + this.snake.width) >= a.x - size
-            // && (s.y + this.snake.height) >= a.y - size
-            // && s.x <= (a.x + size) 
-            // && s.y <= (a.y + size)
-
-        ) {
-            //
-
-            this.score++;
-            const event = new CustomEvent('updateScore', {detail: this.score});
-            document.dispatchEvent(event);
-            console.log('Score: ', this.score);
-            this.snake.inc();
-            return true;
+            a = this.apple.location;
+        if ((s.x + SNAKE_OFFSET) >= a.x
+            && (s.y + SNAKE_OFFSET) >= a.y
+            && s.x <= (a.x + SNAKE_OFFSET)
+            && s.y <= (a.y + SNAKE_OFFSET)) {
+                this.updateScore();
+                this.snake.inc();
+                return true;
+        } else {
+            return false;
         }
-        return false;
+    }
+    //todo 
+    ObsOverApple(o) {
+        const a = this.apple;
+        return ((o.location.x + (o.width)) >= a.location.x
+            && (o.location.y + (o.height)) >= a.location.y
+            && o.location.x <= (a.location.x + (a.width))
+            && o.location.y <= (a.location.y + (a.height)));
     }
 
+    ObsOverSnake(o) {
+        const s = this.snake;
+        return ((s.location.x + 10) >= o.location.x
+        && (s.location.y + 10) >= o.location.y
+        && s.location.x <= (o.location.x + o.width)
+        && s.location.y <= (o.location.y + o.height));
+    }
     //checks if objects are overlapping
-    isOverlap(a, b) {
-        return ((a.location.x + a.width) >= b.location.x
-            && (a.location.y + a.height) >= b.location.y
-            && a.location.x <= (b.location.x + b.width)
-            && a.location.y <= (b.location.y + b.height));
+    isOverlap(){
+
     }
 
-    //determines a crash 
+    //determines a crash of the snake with other game objects
     isCrash() {
         const s = this.snake.location;
-
-        //determines a 'crash' with field's boundries
-        if (s.x < 15 || s.y < 15 ||
-            s.x + this.snake.width > this.width ||
-            s.y + this.snake.height > this.height) {
+        //determines a crash with field's boundries
+        //todo
+        if (s.x < BOUNDARY_OFFSET || s.y < BOUNDARY_OFFSET ||
+            s.x + BOUNDARY_OFFSET > this.width ||
+            s.y + BOUNDARY_OFFSET > this.height) {
             return true;
-        } else if (this.obstacles.length > 0) { //if there are obstacles in the field
-            //determines a collision with an obstacle
-            return this.obstacles.some(obs => this.isOverlap(this.snake, obs));
-        } else if (this.snake.trail.length > 4) {//determine a collision of the snake with itself
+        } else if (this.snake.trail.length > 3) {//determine a collision of the snake with itself
             return this.snake.trail.slice(1).some(point => point.x === this.snake.location.x && point.y === this.snake.location.y);
+        } else if (this.obstacles.length > 0) { //if there are obstacles in the field
+            //determines a collision with an obstacle            
+            return this.obstacles.some(obs => this.ObsOverSnake(obs));
         } else { //default
             return false;
         }
@@ -250,7 +228,9 @@ class Game {
         this.prevMove = '';
         this.field = new Field(this.ctx);
         this.snake = new Snake(this.ctx);
-        this.apple = new Apple(this.ctx, new Point(this.generateRandom(this.width - OFFSET), this.generateRandom(this.height - OFFSET)));
+        //todo
+        this.apple = new Apple(this.ctx, new Point(this.generateRandom(this.width - OVERLAP_OFFSET),
+                                                     this.generateRandom(this.height - OVERLAP_OFFSET)));
         this.obstacles = [];
         this.interval = setInterval(() => {
             this.render();
@@ -261,30 +241,35 @@ class Game {
     addObstacles() {
         //generate obstacles
         for (let i = 0; i < this.numOfObstacles; i++) {
-
-            //generate number
             let loc = null;
             let duplicate = true;
             while (duplicate) {
-                //
-                loc = new Point(this.generateRandom(this.width), this.generateRandom(this.height));
-                //check for duplicates
-                duplicate = this.obstacles.some(obs => obs.location.x === loc.x && obs.location.y === loc.y);
+                loc = new Point(this.generateRandom(this.width - OVERLAP_OFFSET), this.generateRandom(this.height - OVERLAP_OFFSET));
+                //check for duplicates locations
+                //todo
+                duplicate = this.obstacles.some(obs => obs.location.x === loc.x 
+                                                        && obs.location.y === loc.y 
+                                                        && obs.location.x === this.snake.location.x
+                                                        && obs.location.x === this.snake.location.x);
             }
-            this.obstacles.push(new Obstacle(this.ctx, loc)); //todo use copy constructor for loc
+            this.obstacles.push(new Obstacle(this.ctx, loc)); //todo use copy constructor for loc            
         }
     }
-    //
+    //updates the score via custom event
     updateScore() {
-        //todo send ajax or event
+        this.score++;
+        document.dispatchEvent(new CustomEvent('updateScore', { detail: this.score }));
+    }
+    //notify end of game via custom event
+    NotifyEndOfGame() {
+        document.dispatchEvent(new CustomEvent('crash'));
     }
     //validates the snake move
     isValidMove(currMove) {
-
+        //if same direction
         if (currMove === this.prevMove) {
             return false;
-        } else {
-            //  
+        } else { // if counter-direction, returns false - otherwise returns true
             switch (currMove) {
                 case DIRECTIONS.LEFT:
                     return this.prevMove === DIRECTIONS.RIGHT ? false : true;
@@ -297,9 +282,8 @@ class Game {
             }
         }
     }
-
     //snake motion handler
-    setMotionController() {
+    setMotionListener() {
         document.addEventListener('keydown', e => {
             const move = e.keyCode;
             if (this.isValidMove(move)) {
@@ -309,8 +293,33 @@ class Game {
         });
     }
 
-}//EOC
+    //set score update handler
+    SetUpdateScoreListener() {
+        document.addEventListener('updateScore', (e) => {
+            score.innerText = `Score: ${e.detail}`;
+        });
+    }
+    
 
+    //set end of game handler
+    SetEndOfGameListener() {
+        document.addEventListener('crash', (e) => {
+            if (confirm('play again?')) {
+                game.init();
+                score.innerText = 'Score: 0';
+            }
+        });
+    }
+    //
+    configLayout(c, b) {
+        //append canvas 
+        c.appendChild(this.getCanvas());
+        //set obstacles generator
+        b.addEventListener('click', () => {
+            this.addObstacles();
+        });
+    }
+}
 module.exports = Game;
 
 },{"../constants/constants":1,"./Apple":3,"./Field":4,"./Obstacle":7,"./Point":8,"./Snake":9}],6:[function(require,module,exports){
@@ -431,31 +440,28 @@ class Snake extends GameObject {
     inc() {
         //todo        
         const loc = this.trail[this.trail.length - 1];
-        // console.log(loc);
-
-        //
         this.trail.push(new Point(loc.x, loc.y));
     }
-    //
+
     draw() {
-        //
         const { x, y } = this.direction;
         this.location.x += x;
         this.location.y += y;
         //enqueue new location, dequeue old location 
+        //todo
         this.trail.unshift(new Point(this.location.x, this.location.y));
         this.trail.pop();
         //
-        // this.ctx.fillStyle = '#000';
-        // this.trail.forEach(p => this.ctx.strokeRect(p.x, p.y, this.width, this.height));
-        this.trail.forEach(p => {
-            // this.ctx.strokeRect(p.x, p.y, this.width, this.height);
-            this.ctx.beginPath();
-            this.ctx.fillStyle = COLORS.SNAKE;
-            this.ctx.arc(p.x, p.y, 10, 0, 2 * Math.PI);
-            this.ctx.fill();
-            this.ctx.closePath();
-        });
+        this.ctx.fillStyle = COLORS.SNAKE;
+        this.trail.forEach(p => this.ctx.fillRect(p.x, p.y, this.width, this.height));
+        // this.trail.forEach(p => {
+        //     // this.ctx.strokeRect(p.x, p.y, this.width, this.height);
+        //     this.ctx.beginPath();
+        //     this.ctx.fillStyle = COLORS.SNAKE;
+        //     this.ctx.arc(p.x, p.y, 10, 0, 2 * Math.PI);
+        //     this.ctx.fill();
+        //     this.ctx.closePath();
+        // });
     }
 
     //todo must i use 2 switch mechanisems?
