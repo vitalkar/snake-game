@@ -12,6 +12,7 @@ class GameObject {
             case TYPES.SNAKE:
                 this.width = 20;
                 this.height = 20;
+                //todo
                 this._location = new Point(350, 350); //
                 break;
             case TYPES.APPLE:

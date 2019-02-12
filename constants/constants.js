@@ -18,13 +18,19 @@ const COLORS = {
     SNAKE: '#7670a5',
     APPLE: '#890C0C',
     OBSTACLE: '#737674',
-    // FIELD1: '#26A200',
-    FIELD1: '#16561c',
-    FIELD2: '#7baa61'
+    FIELD: '#16561c',
 };
+
+const OFFSET = {
+    OVERLAP: 20,
+    APPLE: 10,
+    SNAKE: 15,
+    BOUNDARY: 10
+}
 
 module.exports = {
     DIRECTIONS,
     TYPES,
-    COLORS
+    COLORS,
+    OFFSET
 };

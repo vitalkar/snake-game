@@ -4,8 +4,8 @@
     const score = document.getElementById('score');
     const btnObstacles = document.getElementById('btnObstacles');
     const container = document.getElementById('container');
-
-    game.configLayout(container, btnObstacles);
+    //attach elements to proper handlers
+    game.configLayout(container, btnObstacles, score);
     //initiate game
     game.init();
 

@@ -29,20 +29,16 @@ class Snake extends GameObject {
         this.location.x += x;
         this.location.y += y;
         //enqueue new location, dequeue old location 
-        //todo
+        //todo opposite way
         this.trail.unshift(new Point(this.location.x, this.location.y));
         this.trail.pop();
         //
+        this.ctx.shadowBlur = 7;
+        this.ctx.shadowColor = COLORS.SNAKE;
         this.ctx.fillStyle = COLORS.SNAKE;
         this.trail.forEach(p => this.ctx.fillRect(p.x, p.y, this.width, this.height));
-        // this.trail.forEach(p => {
-        //     // this.ctx.strokeRect(p.x, p.y, this.width, this.height);
-        //     this.ctx.beginPath();
-        //     this.ctx.fillStyle = COLORS.SNAKE;
-        //     this.ctx.arc(p.x, p.y, 10, 0, 2 * Math.PI);
-        //     this.ctx.fill();
-        //     this.ctx.closePath();
-        // });
+        this.ctx.shadowBlur = 0;
+
     }
 
     //todo must i use 2 switch mechanisems?

@@ -12,11 +12,12 @@ class Apple extends GameObject {
     }
     //
     draw() {
-        this.ctx.beginPath();
+        this.ctx.shadowBlur = 7;
+        this.ctx.shadowColor = COLORS.APPLE;
         this.ctx.fillStyle = COLORS.APPLE;
-        this.ctx.arc(this.location.x, this.location.y, 10, 0, 2 * Math.PI);
-        this.ctx.fill();
-        this.ctx.closePath();
+        this.ctx.fillRect(this.location.x, this.location.y, this.width, this.height);
+        this.ctx.shadowBlur = 0;
+
     }
 }
 module.exports = Apple;
