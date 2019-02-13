@@ -36,19 +36,6 @@ module.exports = {
 
 },{}],2:[function(require,module,exports){
 'use strict';
-    const Game = require('./models/Game');
-    const game = new Game();
-    const score = document.getElementById('score');
-    const btnObstacles = document.getElementById('btnObstacles');
-    const container = document.getElementById('container');
-    //attach elements to proper handlers
-    game.configLayout(container, btnObstacles, score);
-    //initiate game
-    game.init();
-
-
-},{"./models/Game":5}],3:[function(require,module,exports){
-'use strict';
 const GameObject = require('./GameObject');
 const { COLORS, TYPES } = require('../constants/constants');
 /**
@@ -70,7 +57,7 @@ class Apple extends GameObject {
     }
 }
 module.exports = Apple;
-},{"../constants/constants":1,"./GameObject":6}],4:[function(require,module,exports){
+},{"../constants/constants":1,"./GameObject":5}],3:[function(require,module,exports){
 'use strict';
 const GameObject = require('./GameObject');
 const { COLORS, TYPES } = require('../constants/constants');
@@ -92,7 +79,7 @@ class Field extends GameObject{
     }
 }
 module.exports = Field;
-},{"../constants/constants":1,"./GameObject":6}],5:[function(require,module,exports){
+},{"../constants/constants":1,"./GameObject":5}],4:[function(require,module,exports){
 'use strict';
 const Field = require('./Field');
 const Snake = require('./Snake');
@@ -140,15 +127,8 @@ class Game {
     render() {
         //determine game state
         if (this.isEat()) {
-            //generate new location for the apple
-            let duplicate = true;
-            while (duplicate) {
-                this.apple.location.x = this.generateRandom(this.canvas.width - OFFSET.OVERLAP);
-                this.apple.location.y = this.generateRandom(this.canvas.height - OFFSET.OVERLAP);
-                duplicate = this.obstacles.some(obs => this.isOverlap(this.apple, obs));
-            }
-        }
-        //check for crash
+            this.setNewAppleLocation();
+        } 
         if (this.isCrash()) {
             //end of game
             clearInterval(this.interval);
@@ -173,21 +153,44 @@ class Game {
             return false;
         }
     }
+    //sets a new location of the apple on the field
+    setNewAppleLocation() {
+        let duplicate = true;
+        while (duplicate) {
+            this.apple.location.x = this.generateRandom(this.canvas.width - OFFSET.OVERLAP);
+            this.apple.location.y = this.generateRandom(this.canvas.height - OFFSET.OVERLAP);
+            duplicate = this.obstacles.some(obs => this.isOverlap(this.apple, obs));
+        }
+    }
     //determines a crash of the snake with other game objects
     isCrash() {
+        return (this.isBoundaryCrash() || this.isObsCrash() || this.isSelfCrash()) ? true : false ;
+    }
+    //determines a crash with field's boundries
+    isBoundaryCrash() {
         const s = this.snake.location;
-        //determines a crash with field's boundries
-        if (s.x < OFFSET.BOUNDARY || s.y < OFFSET.BOUNDARY ||
-            s.x > this.canvas.width - OFFSET.BOUNDARY - 5 ||
-            s.y > this.canvas.height - OFFSET.BOUNDARY - 5) {
-            return true;
-        } else if (this.snake.trail.length > 3) {//determine a crash of the snake with itself
-            return this.snake.trail.slice(1).some(p => p.x === this.snake.location.x && p.y === this.snake.location.y);
-        } else if (this.obstacles.length > 0) { //if there are obstacles in the field
-            //determines a collision with an obstacle            
-            return this.obstacles.some(obs => this.isOverlap(this.snake, obs));
-        } else { //default
+        return (s.x < OFFSET.BOUNDARY 
+                || s.y < OFFSET.BOUNDARY 
+                || s.x > this.canvas.width - OFFSET.BOUNDARY - 5 
+                || s.y > this.canvas.height - OFFSET.BOUNDARY - 5) ;
+    }
+    //determines a crash with an obstacle            
+    isObsCrash() {
+        //if there are no obstacles
+        if (this.obstacles.length === 0) {
             return false;
+        } else {
+            return this.obstacles.some(obs => this.isOverlap(this.snake, obs));
+        }
+    }
+    //determines a crash of the snake with itself
+    isSelfCrash() {
+        //if the snake's trail is too short
+        if (this.snake.trail.length < 5) {
+            return false;
+        } else {
+            const s = this.snake.location;
+            return this.snake.trail.slice(1).some(p => p.x === s.x && p.y === s.y);
         }
     }
     //checks if objects are overlapping
@@ -280,7 +283,7 @@ class Game {
 }
 module.exports = Game;
 
-},{"../constants/constants":1,"./Apple":3,"./Field":4,"./Obstacle":7,"./Point":8,"./Snake":9}],6:[function(require,module,exports){
+},{"../constants/constants":1,"./Apple":2,"./Field":3,"./Obstacle":6,"./Point":7,"./Snake":8}],5:[function(require,module,exports){
 'use strict';
 const Point = require('./Point');
 const { TYPES } = require('../constants/constants');
@@ -320,7 +323,7 @@ class GameObject {
     }
 }
 module.exports = GameObject;
-},{"../constants/constants":1,"./Point":8}],7:[function(require,module,exports){
+},{"../constants/constants":1,"./Point":7}],6:[function(require,module,exports){
 'use strict';
 const GameObject = require('./GameObject');
 const { COLORS, TYPES } = require('../constants/constants');
@@ -340,7 +343,7 @@ class Obstacle extends GameObject {
     }
 }
 module.exports = Obstacle;
-},{"../constants/constants":1,"./GameObject":6}],8:[function(require,module,exports){
+},{"../constants/constants":1,"./GameObject":5}],7:[function(require,module,exports){
 'use strict';
 /**
  * represents a point on the field
@@ -368,7 +371,7 @@ class Point {
     }
 }
 module.exports = Point;
-},{}],9:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 'use strict';
 const GameObject = require('./GameObject');
 const Point = require('./Point');
@@ -430,4 +433,17 @@ class Snake extends GameObject {
     }
 }
 module.exports = Snake;
-},{"../constants/constants":1,"./GameObject":6,"./Point":8}]},{},[2]);
+},{"../constants/constants":1,"./GameObject":5,"./Point":7}],9:[function(require,module,exports){
+'use strict';
+    const Game = require('./Game');
+    const game = new Game();
+    const score = document.getElementById('score');
+    const btnObstacles = document.getElementById('btnObstacles');
+    const container = document.getElementById('container');
+    //attach elements to proper handlers
+    game.configLayout(container, btnObstacles, score);
+    //initiate game
+    game.init();
+
+
+},{"./Game":4}]},{},[9]);

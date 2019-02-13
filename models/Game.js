@@ -45,15 +45,8 @@ class Game {
     render() {
         //determine game state
         if (this.isEat()) {
-            //generate new location for the apple
-            let duplicate = true;
-            while (duplicate) {
-                this.apple.location.x = this.generateRandom(this.canvas.width - OFFSET.OVERLAP);
-                this.apple.location.y = this.generateRandom(this.canvas.height - OFFSET.OVERLAP);
-                duplicate = this.obstacles.some(obs => this.isOverlap(this.apple, obs));
-            }
-        }
-        //check for crash
+            this.setNewAppleLocation();
+        } 
         if (this.isCrash()) {
             //end of game
             clearInterval(this.interval);
@@ -78,21 +71,44 @@ class Game {
             return false;
         }
     }
+    //sets a new location of the apple on the field
+    setNewAppleLocation() {
+        let duplicate = true;
+        while (duplicate) {
+            this.apple.location.x = this.generateRandom(this.canvas.width - OFFSET.OVERLAP);
+            this.apple.location.y = this.generateRandom(this.canvas.height - OFFSET.OVERLAP);
+            duplicate = this.obstacles.some(obs => this.isOverlap(this.apple, obs));
+        }
+    }
     //determines a crash of the snake with other game objects
     isCrash() {
+        return (this.isBoundaryCrash() || this.isObsCrash() || this.isSelfCrash()) ? true : false ;
+    }
+    //determines a crash with field's boundries
+    isBoundaryCrash() {
         const s = this.snake.location;
-        //determines a crash with field's boundries
-        if (s.x < OFFSET.BOUNDARY || s.y < OFFSET.BOUNDARY ||
-            s.x > this.canvas.width - OFFSET.BOUNDARY - 5 ||
-            s.y > this.canvas.height - OFFSET.BOUNDARY - 5) {
-            return true;
-        } else if (this.snake.trail.length > 3) {//determine a crash of the snake with itself
-            return this.snake.trail.slice(1).some(p => p.x === this.snake.location.x && p.y === this.snake.location.y);
-        } else if (this.obstacles.length > 0) { //if there are obstacles in the field
-            //determines a collision with an obstacle            
-            return this.obstacles.some(obs => this.isOverlap(this.snake, obs));
-        } else { //default
+        return (s.x < OFFSET.BOUNDARY 
+                || s.y < OFFSET.BOUNDARY 
+                || s.x > this.canvas.width - OFFSET.BOUNDARY - 5 
+                || s.y > this.canvas.height - OFFSET.BOUNDARY - 5) ;
+    }
+    //determines a crash with an obstacle            
+    isObsCrash() {
+        //if there are no obstacles
+        if (this.obstacles.length === 0) {
             return false;
+        } else {
+            return this.obstacles.some(obs => this.isOverlap(this.snake, obs));
+        }
+    }
+    //determines a crash of the snake with itself
+    isSelfCrash() {
+        //if the snake's trail is too short
+        if (this.snake.trail.length < 5) {
+            return false;
+        } else {
+            const s = this.snake.location;
+            return this.snake.trail.slice(1).some(p => p.x === s.x && p.y === s.y);
         }
     }
     //checks if objects are overlapping
