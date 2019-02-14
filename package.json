@@ -12,5 +12,8 @@
   "dependencies": {
     "browserify": "^16.2.3",
     "express": "^4.16.4"
-  }
+  },
+    "engines": {
+      "node": "10.x"
+    }
 }

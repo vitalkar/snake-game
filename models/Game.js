@@ -9,7 +9,7 @@ const { DIRECTIONS, OFFSET } = require('../constants/constants');
  * represents the game & all of it's parts
  */
 class Game {
-
+    
     constructor() {
         this.canvas = document.createElement('canvas');
         this.ctx = this.canvas.getContext('2d');
@@ -61,6 +61,9 @@ class Game {
             this.snake.draw();
         }
     }
+    /**
+     * GAME MODEL METHODS
+     */
     //check if the snake and the apple overlaps
     isEat() {
         if (this.isOverlap(this.snake, this.apple)) {
@@ -132,20 +135,6 @@ class Game {
             }  
         }
     }
-    //generates random number in range of (0 - n) + OFFSET
-    generateRandom(n) {
-        // return Math.floor(Math.random() * n) + SNAKE_OFFSET;
-        return Math.floor(Math.random() * n);
-    }
-    //updates the score via custom event
-    updateScore() {
-        this.score++;
-        document.dispatchEvent(new CustomEvent('updateScore', { detail: this.score }));
-    }
-    //notify end of game via custom event
-    NotifyEndOfGame() {
-        document.dispatchEvent(new CustomEvent('crash'));
-    }
     //validates the snake move
     isValidMove(currMove) {
         //if same direction
@@ -164,6 +153,24 @@ class Game {
             }
         }
     }
+    //updates the score via custom event
+    updateScore() {
+        this.score++;
+        document.dispatchEvent(new CustomEvent('updateScore', { detail: this.score }));
+    }
+    //notify end of game via custom event
+    NotifyEndOfGame() {
+        document.dispatchEvent(new CustomEvent('crash'));
+    }
+    //utility method
+    //generates random number in range of (0 - n) + OFFSET
+    generateRandom(n) {
+        // return Math.floor(Math.random() * n) + SNAKE_OFFSET;
+        return Math.floor(Math.random() * n);
+    }
+    /**
+     * GAME CONTROL METHODS
+     */
     //snake motion handler
     setMotionListener() {
         document.addEventListener('keydown', e => {
@@ -183,7 +190,7 @@ class Game {
             }
         });
     }
-    //append the canvas to view
+    //append the canvas to the view
     //sets event listeners
     configLayout(c, b, s) {
         //append canvas 

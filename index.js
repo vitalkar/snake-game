@@ -1,15 +1,8 @@
 'use strict';
 const express = require('express');
 const app = express();
-
-
-// console.log(__dirname + '/index.html');
-
-
-app.get('/', function (req, res) {
-    res.sendFile(__dirname + '/index.html');
-});
-
+//
+const PORT = process.env.PORT || 8000;
+//middleware
 app.use(express.static('public'));
-
-app.listen(3000);
+app.listen(PORT, () => console.log(`listening on port ${PORT}`));
